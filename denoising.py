@@ -85,4 +85,4 @@ if __name__ == "__main__":
 
         best_result = noise2self_denoising(noisy)
         best_result = (np.clip(best_result, 0, 1) * 255.0).astype(np.uint8)
-        cv2.imwrite("./n2s/%s/sigma%s/%s" % (dataset, sigma, img.split("/")[-1].split(".")[0]), best_result)
+        cv2.imwrite("./n2s/%s/sigma%s/%s.png" % (dataset, sigma, img.split("/")[-1].split(".")[0]), best_result)
