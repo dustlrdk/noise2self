@@ -74,9 +74,9 @@ if __name__ == "__main__":
         print("[*] clean image range : %.2f, %.2f" % (image.min(), image.max()))
         print("[*] noisy image range : %.2f, %.2f" % (noisy_image.min(), noisy_image.max()))
 
-        if noisy_image.shape == 2:
+        if len(noisy_image.shape) == 2:
             noisy = torch.Tensor(noisy_image[np.newaxis, np.newaxis])
-        elif noisy_image.shape == 3:
+        elif len(noisy_image.shape) == 3:
             noisy = torch.Tensor(noisy_image[np.newaxis])
         else:
             noisy = False
