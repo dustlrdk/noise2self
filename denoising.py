@@ -9,7 +9,7 @@ from models.dncnn import DnCNN
 from torch.nn import MSELoss, L1Loss
 from torch.optim import Adam
 
-def noise2self_denoising(noisy, device="cuda", gray = True):
+def noise2self_denoising(image, noisy, device="cuda", gray = True):
     masker = Masker(width=4, mode='interpolate')
     model = DnCNN(1 if gray else 3, num_of_layers=8)
 
@@ -52,7 +52,7 @@ def noise2self_denoising(noisy, device="cuda", gray = True):
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                denoised = np.clip(model(noisy).detach().cpu().numpy()[0, 0], 0, 1).astype(np.float64)
+                denoised = np.clip(model(noisy).detach().cpu().numpy()[0], 0, 1).astype(np.float64)
                 best_psnr = compare_psnr(denoised, image)
                 best_images.append(denoised)
                 print("\tModel PSNR: ", np.round(best_psnr, 2))
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     image_list = glob("./testset/%s/*.png" % dataset)
 
     for img in image_list:
-        image = cv2.imread(img, -1).astype(np.float)
+        image = cv2.imread(img, -1).astype(np.float).transpose([2,0,1])
         noisy_image = image + np.random.randn(*image.shape) * sigma
         print("[*] clean image range : %.2f, %.2f" % (image.min(), image.max()))
         print("[*] noisy image range : %.2f, %.2f" % (noisy_image.min(), noisy_image.max()))
@@ -83,6 +83,9 @@ if __name__ == "__main__":
             print("?")
             exit()
 
-        best_result = noise2self_denoising(noisy)
+        gray = True if noisy.shape[1] == 1 else False
+
+
+        best_result = noise2self_denoising(image, noisy, gray)
         best_result = (np.clip(best_result, 0, 1) * 255.0).astype(np.uint8)
         cv2.imwrite("./n2s/%s/sigma%s/%s.png" % (dataset, sigma, img.split("/")[-1].split(".")[0]), best_result)
