@@ -22,7 +22,7 @@ def noise2self_denoising(image, noisy, device="cuda", gray = True):
     losses = []
     val_losses = []
     best_images = []
-    best_val_loss = 1
+    best_val_loss = 1*100
 
     for i in range(500):
         model.train()
@@ -52,11 +52,11 @@ def noise2self_denoising(image, noisy, device="cuda", gray = True):
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                denoised = np.clip(model(noisy).detach().cpu().numpy()[0], 0, 1).astype(np.float64)
+                denoised = np.clip(model(noisy).detach().cpu().numpy()[0][0], 0, 1).astype(np.float64)
                 best_psnr = compare_psnr(denoised, image)
-                best_images.append(denoised)
+                best_images = denoised
                 print("\tModel PSNR: ", np.round(best_psnr, 2))
-    return best_images[-1]
+    return best_images
 
 
 import os
@@ -67,17 +67,20 @@ if __name__ == "__main__":
     dataset = sys.argv[1]
     sigma   = float(sys.argv[2])
     image_list = glob("./testset/%s/*.png" % dataset)
-
+    os.makedirs("./n2s/%s/sigma%s"%(dataset, sigma), exist_ok = True)
     for img in image_list:
-        image = cv2.imread(img, -1).astype(np.float).transpose([2,0,1])
+        image = cv2.imread(img, -1).astype(np.float)
         noisy_image = image + np.random.randn(*image.shape) * sigma
         print("[*] clean image range : %.2f, %.2f" % (image.min(), image.max()))
         print("[*] noisy image range : %.2f, %.2f" % (noisy_image.min(), noisy_image.max()))
+        image /= 255.0
+        noisy_image /=255.0
+
 
         if len(noisy_image.shape) == 2:
             noisy = torch.Tensor(noisy_image[np.newaxis, np.newaxis])
         elif len(noisy_image.shape) == 3:
-            noisy = torch.Tensor(noisy_image[np.newaxis])
+            noisy = torch.Tensor(noisy_image.transpose([2,0,1])[np.newaxis])
         else:
             noisy = False
             print("?")
@@ -85,7 +88,7 @@ if __name__ == "__main__":
 
         gray = True if noisy.shape[1] == 1 else False
 
-
-        best_result = noise2self_denoising(image, noisy, gray)
+        print(noisy.shape)
+        best_result = noise2self_denoising(image, noisy, gray=gray)
         best_result = (np.clip(best_result, 0, 1) * 255.0).astype(np.uint8)
         cv2.imwrite("./n2s/%s/sigma%s/%s.png" % (dataset, sigma, img.split("/")[-1].split(".")[0]), best_result)
