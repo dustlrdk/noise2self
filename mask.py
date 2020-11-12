@@ -74,10 +74,10 @@ def pixel_grid_mask(shape, patch_size, phase_x, phase_y):
 
 def interpolate_mask(tensor, mask, mask_inv):
     device = tensor.device
-
     mask = mask.to(device)
 
-    kernel = np.array([[0.5, 1.0, 0.5], [1.0, 0.0, 1.0], (0.5, 1.0, 0.5)])
+    kernel = np.array([[[0.5, 1.0, 0.5], [1.0, 0.0, 1.0], (0.5, 1.0, 0.5)]])
+
     kernel = kernel[np.newaxis, np.newaxis, :, :]
     kernel = torch.Tensor(kernel).to(device)
     kernel = kernel / kernel.sum()

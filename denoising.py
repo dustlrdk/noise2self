@@ -4,14 +4,14 @@ import numpy as np
 from skimage.measure import compare_psnr
 
 from mask import Masker
-from models.dncnn import DnCNN
+from models.s2s import s2s_
 
 from torch.nn import MSELoss, L1Loss
 from torch.optim import Adam
 
-def noise2self_denoising(image, noisy, device="cuda", gray = True):
+def noise2self_denoising(image, noisy, gray = True, device="cuda"):
     masker = Masker(width=4, mode='interpolate')
-    model = DnCNN(1 if gray else 3, num_of_layers=8)
+    model = s2s_(1 if gray else 3,1 if gray else 3, "softplus")
 
     loss_function = MSELoss()
     optimizer = Adam(model.parameters(), lr=0.01)
